@@ -1,0 +1,241 @@
+{
+  "name": "baseline-dev",
+  "displayName": "Baseline.dev",
+  "description": "AI code assistant specialized in web features and browser compatibility using Baseline data",
+  "version": "0.1.0",
+  "publisher": "baselinedev",
+  "author": {
+    "name": "Baseline.dev Team"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/baselinedev/baseline-dev"
+  },
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Machine Learning",
+    "Linters",
+    "Other"
+  ],
+  "keywords": [
+    "ai",
+    "assistant",
+    "web",
+    "baseline",
+    "browser",
+    "compatibility",
+    "refactoring",
+    "css",
+    "javascript",
+    "html",
+    "modernization"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "baselinedev.openChat",
+        "title": "Baseline.dev: Open Chat",
+        "category": "Baseline.dev",
+        "icon": "$(comment-discussion)"
+      },
+      {
+        "command": "baselinedev.discoverFeatures",
+        "title": "Baseline.dev: Discover New Features",
+        "category": "Baseline.dev",
+        "icon": "$(telescope)"
+      },
+      {
+        "command": "baselinedev.refactorModern",
+        "title": "Baseline.dev: Refactor for Modern Browsers",
+        "category": "Baseline.dev",
+        "icon": "$(wand)"
+      },
+      {
+        "command": "baselinedev.checkFeature",
+        "title": "Baseline.dev: Check Feature Status",
+        "category": "Baseline.dev",
+        "icon": "$(info)"
+      },
+      {
+        "command": "baselinedev.configure",
+        "title": "Baseline.dev: Configure",
+        "category": "Baseline.dev",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "baselinedev.refreshData",
+        "title": "Baseline.dev: Refresh Baseline Data",
+        "category": "Baseline.dev",
+        "icon": "$(refresh)"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "baselinedev.openChat"
+        },
+        {
+          "command": "baselinedev.discoverFeatures"
+        },
+        {
+          "command": "baselinedev.refactorModern"
+        },
+        {
+          "command": "baselinedev.checkFeature"
+        },
+        {
+          "command": "baselinedev.configure"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "baselinedev.refactorModern",
+          "when": "editorHasSelection",
+          "group": "1_modification"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Baseline.dev",
+      "properties": {
+        "baselinedev.model": {
+          "type": "string",
+          "enum": [
+            "claude",
+            "gemini",
+            "ollama"
+          ],
+          "enumDescriptions": [
+            "Anthropic Claude (requires API key)",
+            "Google Gemini (requires API key)",
+            "Ollama local models (requires local Ollama installation)"
+          ],
+          "default": "claude",
+          "description": "AI model to use for code assistance",
+          "order": 1
+        },
+        "baselinedev.claudeModel": {
+          "type": "string",
+          "enum": [
+            "claude-3-5-sonnet-20241022",
+            "claude-3-opus-20240229",
+            "claude-3-sonnet-20240229",
+            "claude-3-haiku-20240307"
+          ],
+          "default": "claude-3-5-sonnet-20241022",
+          "description": "Claude model version to use",
+          "order": 2
+        },
+        "baselinedev.geminiModel": {
+          "type": "string",
+          "enum": [
+            "gemini-1.5-flash",
+            "gemini-1.5-pro",
+            "gemini-1.5-flash-latest",
+            "gemini-1.5-pro-latest"
+          ],
+          "default": "gemini-1.5-flash",
+          "description": "Gemini model version to use",
+          "order": 3
+        },
+        "baselinedev.ollamaEndpoint": {
+          "type": "string",
+          "default": "http://localhost:11434",
+          "description": "Ollama API endpoint URL",
+          "order": 4
+        },
+        "baselinedev.ollamaModel": {
+          "type": "string",
+          "default": "codellama",
+          "description": "Ollama model name (e.g., codellama, mistral, llama2)",
+          "order": 5
+        },
+        "baselinedev.targetBrowsers": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "chrome",
+              "firefox",
+              "safari",
+              "edge"
+            ]
+          },
+          "default": [
+            "chrome",
+            "firefox",
+            "safari",
+            "edge"
+          ],
+          "description": "Target browsers for compatibility checks",
+          "order": 6
+        },
+        "baselinedev.showStatusBar": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show Baseline.dev status bar item",
+          "order": 7
+        },
+        "baselinedev.baselineThreshold": {
+          "type": "string",
+          "enum": [
+            "high",
+            "low"
+          ],
+          "enumDescriptions": [
+            "Feature is available in all major browsers (highest compatibility)",
+            "Feature is available in some browsers (moderate compatibility)"
+          ],
+          "default": "high",
+          "description": "Minimum Baseline status for feature suggestions",
+          "order": 8
+        },
+        "baselinedev.useRealTimeData": {
+          "type": "boolean",
+          "default": true,
+          "description": "Fetch latest Baseline data from API (recommended for up-to-date information)",
+          "order": 9
+        }
+      }
+    },
+    "keybindings": [
+      {
+        "command": "baselinedev.openChat",
+        "key": "ctrl+shift+b",
+        "mac": "cmd+shift+b",
+        "when": "editorTextFocus"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^18.19.0",
+    "@types/vscode": "^1.80.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "@vscode/vsce": "^2.22.0",
+    "eslint": "^8.56.0",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.27.0",
+    "@google/generative-ai": "^0.18.0",
+    "axios": "^1.7.0",
+    "web-features": "^1.0.0"
+  }
+}
+
