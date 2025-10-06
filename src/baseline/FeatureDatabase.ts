@@ -26,7 +26,7 @@ export class FeatureDatabase {
             if (useRealTime) {
                 // Try to fetch real-time data from API
                 try {
-                    const realTimeData = await BaselineAPI.fetchLatestFeatures();
+                    const realTimeData = await BaselineAPI.fetchLatestFeatures(true);
                     this.features = new Map(Object.entries(realTimeData));
                     this.lastRealTimeFetch = new Date();
                     this.initialized = true;
@@ -58,7 +58,7 @@ export class FeatureDatabase {
      */
     async refreshFromAPI(): Promise<boolean> {
         try {
-            const realTimeData = await BaselineAPI.fetchLatestFeatures();
+            const realTimeData = await BaselineAPI.fetchLatestFeatures(true);
             this.features = new Map(Object.entries(realTimeData));
             this.lastRealTimeFetch = new Date();
             this.useRealTimeData = true;

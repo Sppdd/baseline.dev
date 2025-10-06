@@ -215,7 +215,7 @@ How can I help you today?`;
     }
 
     /**
-     * Get webview HTML content
+     * Get webview HTML content with anime.js animations
      */
     private getWebviewContent(): string {
         return `<!DOCTYPE html>
@@ -248,40 +248,48 @@ How can I help you today?`;
             display: flex;
             flex-direction: column;
             gap: 16px;
+            scroll-behavior: smooth;
         }
 
         .message {
             padding: 12px 16px;
-            border-radius: 8px;
+            border-radius: 12px;
             max-width: 85%;
             word-wrap: break-word;
-            line-height: 1.5;
+            line-height: 1.6;
+            opacity: 0;
+            transform: translateY(20px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         .message.user {
-            background: var(--vscode-input-background);
+            background: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
             align-self: flex-end;
-            border: 1px solid var(--vscode-input-border);
+            border-bottom-right-radius: 4px;
         }
 
         .message.assistant {
             background: var(--vscode-editor-selectionBackground);
             align-self: flex-start;
+            border-bottom-left-radius: 4px;
         }
 
         .message pre {
             background: var(--vscode-textCodeBlock-background);
-            padding: 8px;
-            border-radius: 4px;
+            padding: 12px;
+            border-radius: 6px;
             overflow-x: auto;
-            margin: 8px 0;
+            margin: 12px 0;
+            border-left: 3px solid var(--vscode-focusBorder);
         }
 
         .message code {
             background: var(--vscode-textCodeBlock-background);
-            padding: 2px 4px;
-            border-radius: 3px;
+            padding: 3px 6px;
+            border-radius: 4px;
             font-family: var(--vscode-editor-font-family);
+            font-size: 0.9em;
         }
 
         .message pre code {
@@ -289,54 +297,71 @@ How can I help you today?`;
             padding: 0;
         }
 
+        .message strong {
+            color: var(--vscode-textLink-foreground);
+        }
+
         #input-container {
             border-top: 1px solid var(--vscode-panel-border);
             padding: 16px;
             background: var(--vscode-editor-background);
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
         }
 
         #input-box {
             display: flex;
             gap: 8px;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
         }
 
         #message-input {
             flex: 1;
-            padding: 10px;
+            padding: 12px;
             background: var(--vscode-input-background);
             color: var(--vscode-input-foreground);
             border: 1px solid var(--vscode-input-border);
-            border-radius: 4px;
+            border-radius: 8px;
             font-family: var(--vscode-font-family);
             font-size: var(--vscode-font-size);
             resize: vertical;
             min-height: 60px;
+            transition: all 0.2s ease;
         }
 
         #message-input:focus {
-            outline: 1px solid var(--vscode-focusBorder);
+            outline: none;
+            border-color: var(--vscode-focusBorder);
+            box-shadow: 0 0 0 2px var(--vscode-focusBorder);
+            transform: scale(1.01);
         }
 
         .button-group {
             display: flex;
             gap: 8px;
+            flex-wrap: wrap;
         }
 
         button {
-            padding: 8px 16px;
+            padding: 10px 18px;
             background: var(--vscode-button-background);
             color: var(--vscode-button-foreground);
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
             font-family: var(--vscode-font-family);
             font-size: var(--vscode-font-size);
-            transition: background 0.2s;
+            transition: all 0.2s ease;
+            font-weight: 500;
         }
 
-        button:hover {
+        button:hover:not(:disabled) {
             background: var(--vscode-button-hoverBackground);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(0);
         }
 
         button:disabled {
@@ -349,25 +374,52 @@ How can I help you today?`;
             color: var(--vscode-button-secondaryForeground);
         }
 
-        button.secondary:hover {
+        button.secondary:hover:not(:disabled) {
             background: var(--vscode-button-secondaryHoverBackground);
         }
 
         .loading {
-            padding: 12px;
+            padding: 12px 20px;
             text-align: center;
             color: var(--vscode-descriptionForeground);
+            background: var(--vscode-editor-selectionBackground);
+            border-radius: 12px;
+            max-width: 150px;
+            align-self: flex-start;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .loading::after {
-            content: '...';
-            animation: dots 1.5s steps(4, end) infinite;
+        .loading-dots {
+            display: flex;
+            gap: 4px;
         }
 
-        @keyframes dots {
-            0%, 20% { content: '.'; }
-            40% { content: '..'; }
-            60%, 100% { content: '...'; }
+        .loading-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--vscode-foreground);
+            opacity: 0.4;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .typing-indicator {
+            font-size: 0.85em;
+            color: var(--vscode-descriptionForeground);
+            font-style: italic;
+            padding: 4px 0;
         }
     </style>
 </head>
@@ -376,18 +428,20 @@ How can I help you today?`;
     
     <div id="input-container">
         <div id="input-box">
-            <textarea id="message-input" placeholder="Ask about web features..." rows="3"></textarea>
+            <textarea id="message-input" placeholder="Ask about web features... (Cmd/Ctrl+Enter to send)" rows="3"></textarea>
         </div>
         <div class="button-group">
-            <button id="send-btn" onclick="sendMessage()">Send</button>
+            <button id="send-btn" onclick="sendMessage()">✨ Send</button>
             <button class="secondary" onclick="attachFile()">📎 Attach File</button>
             <button class="secondary" onclick="clearChat()">🗑️ Clear</button>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
     <script>
         const vscode = acquireVsCodeApi();
         let isLoading = false;
+        let messageCount = 0;
 
         function sendMessage() {
             if (isLoading) return;
@@ -408,7 +462,19 @@ How can I help you today?`;
 
         function clearChat() {
             if (confirm('Clear all messages?')) {
-                vscode.postMessage({ command: 'clearChat' });
+                const container = document.getElementById('chat-container');
+                // Animate out before clearing
+                anime({
+                    targets: '.message',
+                    opacity: 0,
+                    translateX: (el) => el.classList.contains('user') ? 100 : -100,
+                    duration: 300,
+                    easing: 'easeInQuad',
+                    delay: anime.stagger(50, {direction: 'reverse'}),
+                    complete: () => {
+                        vscode.postMessage({ command: 'clearChat' });
+                    }
+                });
             }
         }
 
@@ -423,14 +489,14 @@ How can I help you today?`;
             let html = escapeHtml(content);
             
             // Bold
-            html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/\\*\\*([^*]+)\\*\\*/g, '<strong>$1</strong>');
             
             // Code blocks
-            html = html.replace(/\`\`\`([\\w]*)[\\n]([\\s\\S]*?)\`\`\`/g, 
+            html = html.replace(/\\\`\\\`\\\`([\\w]*)\\n([\\s\\S]*?)\\\`\\\`\\\`/g, 
                 '<pre><code>$2</code></pre>');
             
             // Inline code
-            html = html.replace(/\`([^\`]+)\`/g, '<code>$1</code>');
+            html = html.replace(/\\\`([^\\\`]+)\\\`/g, '<code>$1</code>');
             
             // Line breaks
             html = html.replace(/\\n/g, '<br>');
@@ -438,15 +504,61 @@ How can I help you today?`;
             return html;
         }
 
+        function animateNewMessage(element, isUser) {
+            anime({
+                targets: element,
+                opacity: [0, 1],
+                translateY: [30, 0],
+                scale: [0.95, 1],
+                duration: 500,
+                easing: 'easeOutElastic(1, .8)'
+            });
+        }
+
+        function scrollToBottom(smooth = true) {
+            const container = document.getElementById('chat-container');
+            if (smooth) {
+                anime({
+                    targets: container,
+                    scrollTop: container.scrollHeight,
+                    duration: 600,
+                    easing: 'easeOutQuad'
+                });
+            } else {
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+
         window.addEventListener('message', event => {
             const message = event.data;
             
             if (message.command === 'updateChat') {
                 const container = document.getElementById('chat-container');
-                container.innerHTML = message.messages
-                    .map(m => \`<div class="message \${m.role}">\${formatMessage(m.content)}</div>\`)
-                    .join('');
-                container.scrollTop = container.scrollHeight;
+                const previousCount = container.children.length;
+                const newMessages = message.messages;
+                
+                // Clear and rebuild
+                container.innerHTML = '';
+                
+                newMessages.forEach((m, index) => {
+                    const msgDiv = document.createElement('div');
+                    msgDiv.className = 'message ' + m.role;
+                    msgDiv.innerHTML = formatMessage(m.content);
+                    container.appendChild(msgDiv);
+                    
+                    // Animate only new messages
+                    if (index >= previousCount - 1) {
+                        setTimeout(() => {
+                            animateNewMessage(msgDiv, m.role === 'user');
+                        }, (index - (previousCount - 1)) * 100);
+                    } else {
+                        // Show existing messages immediately
+                        msgDiv.style.opacity = '1';
+                        msgDiv.style.transform = 'translateY(0)';
+                    }
+                });
+                
+                setTimeout(() => scrollToBottom(true), 100);
             } else if (message.command === 'setLoading') {
                 isLoading = message.loading;
                 const sendBtn = document.getElementById('send-btn');
@@ -457,13 +569,41 @@ How can I help you today?`;
                     const loadingDiv = document.createElement('div');
                     loadingDiv.className = 'loading';
                     loadingDiv.id = 'loading-indicator';
-                    loadingDiv.textContent = 'Thinking';
+                    loadingDiv.innerHTML = '<span>Thinking</span><div class="loading-dots"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>';
                     container.appendChild(loadingDiv);
-                    container.scrollTop = container.scrollHeight;
+                    
+                    // Animate loading indicator
+                    anime({
+                        targets: loadingDiv,
+                        opacity: [0, 1],
+                        translateY: [20, 0],
+                        duration: 300,
+                        easing: 'easeOutQuad'
+                    });
+                    
+                    // Animate dots
+                    anime({
+                        targets: '.loading-dot',
+                        opacity: [0.4, 1],
+                        duration: 600,
+                        loop: true,
+                        direction: 'alternate',
+                        easing: 'easeInOutSine',
+                        delay: anime.stagger(150)
+                    });
+                    
+                    scrollToBottom(true);
                 } else {
                     const loadingDiv = document.getElementById('loading-indicator');
                     if (loadingDiv) {
-                        loadingDiv.remove();
+                        anime({
+                            targets: loadingDiv,
+                            opacity: 0,
+                            translateY: -20,
+                            duration: 200,
+                            easing: 'easeInQuad',
+                            complete: () => loadingDiv.remove()
+                        });
                     }
                 }
             }
@@ -477,10 +617,28 @@ How can I help you today?`;
             }
         });
 
-        // Auto-resize textarea
+        // Auto-resize textarea with animation
         document.getElementById('message-input').addEventListener('input', (e) => {
-            e.target.style.height = '60px';
-            e.target.style.height = Math.min(e.target.scrollHeight, 200) + 'px';
+            const newHeight = Math.min(e.target.scrollHeight, 200);
+            anime({
+                targets: e.target,
+                height: newHeight + 'px',
+                duration: 150,
+                easing: 'easeOutQuad'
+            });
+        });
+
+        // Pulse send button when input has text
+        document.getElementById('message-input').addEventListener('input', (e) => {
+            const sendBtn = document.getElementById('send-btn');
+            if (e.target.value.trim() && !isLoading) {
+                anime({
+                    targets: sendBtn,
+                    scale: [1, 1.05, 1],
+                    duration: 400,
+                    easing: 'easeInOutQuad'
+                });
+            }
         });
     </script>
 </body>
