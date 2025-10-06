@@ -11,6 +11,7 @@ export class ChatPanel {
     private panel: vscode.WebviewPanel | undefined;
     private messages: Array<{ role: string; content: string }> = [];
     private disposables: vscode.Disposable[] = [];
+    private attachedFile: { path: string; content: string; language: string } | undefined;
 
     constructor(
         private context: vscode.ExtensionContext,
@@ -53,9 +54,14 @@ export class ChatPanel {
                     case 'attachFile':
                         await this.attachCurrentFile();
                         break;
-                    case 'clearChat':
-                        this.messages = [];
-                        this.updateChat();
+                    case 'clearAttachedFile':
+                        this.clearAttachedFile();
+                        break;
+                    case 'saveAsNew':
+                        await this.saveAsNewFile(message.content);
+                        break;
+                    case 'overwriteFile':
+                        await this.overwriteAttachedFile(message.content);
                         break;
                 }
             },
@@ -192,12 +198,132 @@ How can I help you today?`;
         const code = editor.document.getText();
         const languageId = editor.document.languageId;
 
+        // Store attached file info
+        this.attachedFile = {
+            path: fileName,
+            content: code,
+            language: languageId
+        };
+
         const attachmentMessage = `📎 Attached file: ${fileName}\n\n\`\`\`${languageId}\n${code.slice(0, 1000)}${code.length > 1000 ? '\n...(truncated)' : ''}\n\`\`\``;
 
         this.messages.push({ role: 'user', content: attachmentMessage });
         this.updateChat();
 
+        // Notify webview about attached file
+        this.panel?.webview.postMessage({
+            command: 'fileAttached',
+            fileName: fileName,
+            hasFile: true
+        });
+
         vscode.window.showInformationMessage(`Attached: ${fileName}`);
+    }
+
+    /**
+     * Clear attached file
+     */
+    private clearAttachedFile(): void {
+        this.attachedFile = undefined;
+        
+        // Notify webview
+        this.panel?.webview.postMessage({
+            command: 'fileCleared'
+        });
+
+        vscode.window.showInformationMessage('Attached file cleared');
+    }
+
+    /**
+     * Save AI response as new file
+     */
+    private async saveAsNewFile(content: string): Promise<void> {
+        try {
+            // Extract code from content if it's in code blocks
+            const codeMatch = content.match(/```[\w]*\n([\s\S]*?)```/);
+            const codeContent = codeMatch ? codeMatch[1] : content;
+
+            // Determine file extension
+            let extension = 'txt';
+            if (this.attachedFile) {
+                const parts = this.attachedFile.path.split('.');
+                extension = parts[parts.length - 1];
+            }
+
+            // Ask user for file name
+            const fileName = await vscode.window.showInputBox({
+                prompt: 'Enter file name',
+                value: `new-file.${extension}`,
+                placeHolder: `filename.${extension}`
+            });
+
+            if (!fileName) {
+                return;
+            }
+
+            // Get workspace folder
+            const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+            if (!workspaceFolder) {
+                vscode.window.showErrorMessage('No workspace folder open');
+                return;
+            }
+
+            // Create file path
+            const filePath = vscode.Uri.joinPath(workspaceFolder.uri, fileName);
+
+            // Write file
+            await vscode.workspace.fs.writeFile(filePath, Buffer.from(codeContent, 'utf8'));
+
+            // Open the new file
+            const document = await vscode.workspace.openTextDocument(filePath);
+            await vscode.window.showTextDocument(document);
+
+            vscode.window.showInformationMessage(`✅ Created: ${fileName}`);
+        } catch (error: any) {
+            vscode.window.showErrorMessage(`Failed to save file: ${error.message}`);
+        }
+    }
+
+    /**
+     * Overwrite attached file with AI response
+     */
+    private async overwriteAttachedFile(content: string): Promise<void> {
+        if (!this.attachedFile) {
+            vscode.window.showErrorMessage('No file attached to overwrite');
+            return;
+        }
+
+        try {
+            // Extract code from content if it's in code blocks
+            const codeMatch = content.match(/```[\w]*\n([\s\S]*?)```/);
+            const codeContent = codeMatch ? codeMatch[1] : content;
+
+            // Confirm overwrite
+            const confirm = await vscode.window.showWarningMessage(
+                `Are you sure you want to overwrite ${this.attachedFile.path}?`,
+                { modal: true },
+                'Yes, Overwrite'
+            );
+
+            if (confirm !== 'Yes, Overwrite') {
+                return;
+            }
+
+            // Write file
+            const filePath = vscode.Uri.file(this.attachedFile.path);
+            await vscode.workspace.fs.writeFile(filePath, Buffer.from(codeContent, 'utf8'));
+
+            // Reopen the file to show changes
+            const document = await vscode.workspace.openTextDocument(filePath);
+            await vscode.window.showTextDocument(document);
+
+            vscode.window.showInformationMessage(`✅ Updated: ${this.attachedFile.path}`);
+
+            // Update attached file content
+            this.attachedFile.content = codeContent;
+        } catch (error: any) {
+            vscode.window.showErrorMessage(`Failed to overwrite file: ${error.message}`);
+        }
     }
 
     /**
@@ -215,7 +341,7 @@ How can I help you today?`;
     }
 
     /**
-     * Get webview HTML content with anime.js animations
+     * Get webview HTML content with teal/green theme and file editing
      */
     private getWebviewContent(): string {
         return `<!DOCTYPE html>
@@ -225,6 +351,14 @@ How can I help you today?`;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Baseline.dev Chat</title>
     <style>
+        :root {
+            --baseline-teal: #16a085;
+            --baseline-teal-hover: #138d75;
+            --baseline-teal-light: rgba(22, 160, 133, 0.1);
+            --baseline-green: #1abc9c;
+            --baseline-green-hover: #17a589;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -251,26 +385,71 @@ How can I help you today?`;
             scroll-behavior: smooth;
         }
 
+        #attached-file-indicator {
+            background: var(--baseline-teal-light);
+            border: 1px solid var(--baseline-teal);
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-bottom: 12px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            font-size: 0.9em;
+            color: var(--baseline-teal);
+        }
+
+        #attached-file-indicator.visible {
+            display: flex;
+        }
+
+        .attached-file-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .clear-attachment {
+            background: none;
+            border: none;
+            color: var(--baseline-teal);
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            font-size: 1.1em;
+        }
+
+        .clear-attachment:hover {
+            background: var(--baseline-teal);
+            color: white;
+            transform: scale(1.1);
+        }
+
         .message {
-            padding: 12px 16px;
-            border-radius: 12px;
+            padding: 14px 18px;
+            border-radius: 16px;
             max-width: 85%;
             word-wrap: break-word;
             line-height: 1.6;
             opacity: 0;
             transform: translateY(20px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
         }
 
         .message.user {
-            background: var(--vscode-button-background);
-            color: var(--vscode-button-foreground);
+            background: var(--baseline-teal);
+            color: white;
             align-self: flex-end;
             border-bottom-right-radius: 4px;
         }
 
         .message.assistant {
-            background: var(--vscode-editor-selectionBackground);
+            background: var(--baseline-teal-light);
+            border: 1px solid var(--baseline-teal);
             align-self: flex-start;
             border-bottom-left-radius: 4px;
         }
@@ -278,34 +457,82 @@ How can I help you today?`;
         .message pre {
             background: var(--vscode-textCodeBlock-background);
             padding: 12px;
-            border-radius: 6px;
+            border-radius: 8px;
             overflow-x: auto;
             margin: 12px 0;
-            border-left: 3px solid var(--vscode-focusBorder);
+            border-left: 3px solid var(--baseline-green);
         }
 
         .message code {
-            background: var(--vscode-textCodeBlock-background);
+            background: rgba(22, 160, 133, 0.15);
             padding: 3px 6px;
             border-radius: 4px;
             font-family: var(--vscode-editor-font-family);
             font-size: 0.9em;
+            color: var(--baseline-teal);
+        }
+
+        .message.user code {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
         }
 
         .message pre code {
             background: none;
             padding: 0;
+            color: var(--vscode-foreground);
         }
 
         .message strong {
-            color: var(--vscode-textLink-foreground);
+            color: var(--baseline-green);
+            font-weight: 600;
+        }
+
+        .message.user strong {
+            color: white;
+        }
+
+        .message-actions {
+            margin-top: 12px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .action-button {
+            padding: 8px 14px;
+            background: var(--baseline-teal);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .action-button:hover {
+            background: var(--baseline-teal-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(22, 160, 133, 0.3);
+        }
+
+        .action-button.secondary {
+            background: var(--baseline-green);
+        }
+
+        .action-button.secondary:hover {
+            background: var(--baseline-green-hover);
         }
 
         #input-container {
-            border-top: 1px solid var(--vscode-panel-border);
+            border-top: 2px solid var(--baseline-teal);
             padding: 16px;
             background: var(--vscode-editor-background);
-            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
         }
 
         #input-box {
@@ -319,8 +546,8 @@ How can I help you today?`;
             padding: 12px;
             background: var(--vscode-input-background);
             color: var(--vscode-input-foreground);
-            border: 1px solid var(--vscode-input-border);
-            border-radius: 8px;
+            border: 2px solid var(--baseline-teal);
+            border-radius: 10px;
             font-family: var(--vscode-font-family);
             font-size: var(--vscode-font-size);
             resize: vertical;
@@ -330,8 +557,8 @@ How can I help you today?`;
 
         #message-input:focus {
             outline: none;
-            border-color: var(--vscode-focusBorder);
-            box-shadow: 0 0 0 2px var(--vscode-focusBorder);
+            border-color: var(--baseline-green);
+            box-shadow: 0 0 0 3px var(--baseline-teal-light);
             transform: scale(1.01);
         }
 
@@ -343,21 +570,24 @@ How can I help you today?`;
 
         button {
             padding: 10px 18px;
-            background: var(--vscode-button-background);
-            color: var(--vscode-button-foreground);
+            background: var(--baseline-teal);
+            color: white;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
             font-family: var(--vscode-font-family);
             font-size: var(--vscode-font-size);
             transition: all 0.2s ease;
-            font-weight: 500;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
 
         button:hover:not(:disabled) {
-            background: var(--vscode-button-hoverBackground);
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            background: var(--baseline-teal-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(22, 160, 133, 0.4);
         }
 
         button:active:not(:disabled) {
@@ -370,25 +600,26 @@ How can I help you today?`;
         }
 
         button.secondary {
-            background: var(--vscode-button-secondaryBackground);
-            color: var(--vscode-button-secondaryForeground);
+            background: var(--baseline-green);
         }
 
         button.secondary:hover:not(:disabled) {
-            background: var(--vscode-button-secondaryHoverBackground);
+            background: var(--baseline-green-hover);
+            box-shadow: 0 4px 12px rgba(26, 188, 156, 0.4);
         }
 
         .loading {
             padding: 12px 20px;
             text-align: center;
-            color: var(--vscode-descriptionForeground);
-            background: var(--vscode-editor-selectionBackground);
-            border-radius: 12px;
+            background: var(--baseline-teal-light);
+            border: 1px solid var(--baseline-teal);
+            border-radius: 16px;
             max-width: 150px;
             align-self: flex-start;
             display: flex;
             align-items: center;
             gap: 8px;
+            color: var(--baseline-teal);
         }
 
         .loading-dots {
@@ -400,7 +631,7 @@ How can I help you today?`;
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: var(--vscode-foreground);
+            background: var(--baseline-teal);
             opacity: 0.4;
         }
 
@@ -414,26 +645,31 @@ How can I help you today?`;
                 transform: translateY(0);
             }
         }
-
-        .typing-indicator {
-            font-size: 0.85em;
-            color: var(--vscode-descriptionForeground);
-            font-style: italic;
-            padding: 4px 0;
-        }
     </style>
 </head>
 <body>
     <div id="chat-container"></div>
     
     <div id="input-container">
+        <div id="attached-file-indicator">
+            <div class="attached-file-info">
+                <span>📎</span>
+                <span id="attached-file-name">No file attached</span>
+            </div>
+            <button class="clear-attachment" onclick="clearAttachedFile()" title="Clear attached file">
+                ✕
+            </button>
+        </div>
         <div id="input-box">
             <textarea id="message-input" placeholder="Ask about web features... (Cmd/Ctrl+Enter to send)" rows="3"></textarea>
         </div>
         <div class="button-group">
-            <button id="send-btn" onclick="sendMessage()">✨ Send</button>
-            <button class="secondary" onclick="attachFile()">📎 Attach File</button>
-            <button class="secondary" onclick="clearChat()">🗑️ Clear</button>
+            <button id="send-btn" onclick="sendMessage()">
+                <span>✨</span> Send
+            </button>
+            <button class="secondary" onclick="attachFile()">
+                <span>📎</span> Attach File
+            </button>
         </div>
     </div>
 
@@ -442,6 +678,9 @@ How can I help you today?`;
         const vscode = acquireVsCodeApi();
         let isLoading = false;
         let messageCount = 0;
+        let hasAttachedFile = false;
+        let attachedFileName = '';
+        let lastAssistantMessage = '';
 
         function sendMessage() {
             if (isLoading) return;
@@ -460,22 +699,22 @@ How can I help you today?`;
             vscode.postMessage({ command: 'attachFile' });
         }
 
-        function clearChat() {
-            if (confirm('Clear all messages?')) {
-                const container = document.getElementById('chat-container');
-                // Animate out before clearing
-                anime({
-                    targets: '.message',
-                    opacity: 0,
-                    translateX: (el) => el.classList.contains('user') ? 100 : -100,
-                    duration: 300,
-                    easing: 'easeInQuad',
-                    delay: anime.stagger(50, {direction: 'reverse'}),
-                    complete: () => {
-                        vscode.postMessage({ command: 'clearChat' });
-                    }
-                });
-            }
+        function clearAttachedFile() {
+            vscode.postMessage({ command: 'clearAttachedFile' });
+        }
+
+        function saveAsNewFile(content) {
+            vscode.postMessage({ command: 'saveAsNew', content });
+        }
+
+        function overwriteFile(content) {
+            vscode.postMessage({ command: 'overwriteFile', content });
+        }
+
+        function extractCodeFromMessage(content) {
+            // Try to extract code block
+            const match = content.match(/\`\`\`[\\w]*\\n([\\s\\S]*?)\`\`\`/);
+            return match ? match[0] : content;
         }
 
         function escapeHtml(text) {
@@ -544,6 +783,31 @@ How can I help you today?`;
                     const msgDiv = document.createElement('div');
                     msgDiv.className = 'message ' + m.role;
                     msgDiv.innerHTML = formatMessage(m.content);
+                    
+                    // Add action buttons to assistant messages with code
+                    if (m.role === 'assistant' && m.content.includes('\`\`\`')) {
+                        lastAssistantMessage = m.content;
+                        const actionsDiv = document.createElement('div');
+                        actionsDiv.className = 'message-actions';
+                        
+                        const saveBtn = document.createElement('button');
+                        saveBtn.className = 'action-button';
+                        saveBtn.innerHTML = '<span>💾</span> Save as New File';
+                        saveBtn.onclick = () => saveAsNewFile(lastAssistantMessage);
+                        
+                        actionsDiv.appendChild(saveBtn);
+                        
+                        if (hasAttachedFile) {
+                            const overwriteBtn = document.createElement('button');
+                            overwriteBtn.className = 'action-button secondary';
+                            overwriteBtn.innerHTML = '<span>✏️</span> Overwrite ' + attachedFileName.split('/').pop();
+                            overwriteBtn.onclick = () => overwriteFile(lastAssistantMessage);
+                            actionsDiv.appendChild(overwriteBtn);
+                        }
+                        
+                        msgDiv.appendChild(actionsDiv);
+                    }
+                    
                     container.appendChild(msgDiv);
                     
                     // Animate only new messages
@@ -559,6 +823,38 @@ How can I help you today?`;
                 });
                 
                 setTimeout(() => scrollToBottom(true), 100);
+            } else if (message.command === 'fileAttached') {
+                hasAttachedFile = message.hasFile;
+                attachedFileName = message.fileName;
+                const indicator = document.getElementById('attached-file-indicator');
+                const nameSpan = document.getElementById('attached-file-name');
+                nameSpan.textContent = message.fileName.split('/').pop();
+                indicator.classList.add('visible');
+                
+                // Animate indicator
+                anime({
+                    targets: indicator,
+                    scale: [0.9, 1],
+                    opacity: [0, 1],
+                    duration: 300,
+                    easing: 'easeOutQuad'
+                });
+            } else if (message.command === 'fileCleared') {
+                hasAttachedFile = false;
+                attachedFileName = '';
+                const indicator = document.getElementById('attached-file-indicator');
+                
+                // Animate out
+                anime({
+                    targets: indicator,
+                    scale: [1, 0.9],
+                    opacity: [1, 0],
+                    duration: 200,
+                    easing: 'easeInQuad',
+                    complete: () => {
+                        indicator.classList.remove('visible');
+                    }
+                });
             } else if (message.command === 'setLoading') {
                 isLoading = message.loading;
                 const sendBtn = document.getElementById('send-btn');

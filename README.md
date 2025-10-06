@@ -1,383 +1,536 @@
-# Baseline.dev
+# Baseline.dev - AI Code Assistant for Web Platform Features
+
+<div align="center">
+  
+![Baseline.dev](media/icon.png)
+
+**The AI code assistant that understands the web platform timeline**
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-teal.svg)](LICENSE)
+[![VS Code](https://img.shields.io/badge/VS%20Code-Extension-16a085.svg)](https://code.visualstudio.com/)
+
+</div>
+
+---
 
 ## 📋 Overview
 
+Baseline.dev is a VS Code extension that provides AI-powered assistance specialized in web platform features and browser compatibility. Unlike general-purpose coding assistants, Baseline.dev understands when web features became "Baseline" (widely available across major browsers) and helps you modernize your code accordingly.
 
-This repository contains **complete planning and implementation documentation** for building a VS Code extension that serves as an AI code assistant specialized in web platform features and browser compatibility.
+### ✨ Key Features
 
-**Project Goal:** Create an MVP VS Code extension that helps developers discover, adopt, and refactor code using the latest web platform features, powered by the official **Baseline** data from the Web Platform Dashboard.
-
----
-
-## 🎯 What Makes This Different?
-
-Unlike general-purpose AI coding assistants (Cursor, Copilot, etc.), this extension:
-
-1. **Understands Web Platform Timeline** - Knows when features became "Baseline" (widely available)
-2. **Browser-Focused Intelligence** - Specializes in compatibility and modernization
-3. **Official Data Source** - Uses `web-features` npm package with authoritative data
-4. **Multi-Model Support** - Users choose: Claude, Gemini, or Ollama local models
-5. **Proactive Modernization** - Suggests upgrading legacy patterns to modern equivalents
-
-### The Unique Selling Proposition (USP)
-
-> **"The only AI code assistant that understands the web platform timeline"**
+- 🤖 **AI Chat Interface** - Interactive chat with context-aware responses about web features
+- 🔍 **Feature Discovery** - Discover newly available web platform features for your project
+- ♻️ **Smart Refactoring** - Modernize legacy code patterns with Baseline-compatible alternatives
+- 📊 **Feature Status Checker** - Query any web feature's Baseline status and browser support
+- 🎯 **Multi-Model Support** - Choose between Claude (Anthropic), Gemini (Google), or Ollama (local)
+- 🌐 **Real-Time Data** - Fetches latest Baseline data from Web Platform Dashboard API
+- 📎 **File Attachment** - Attach files for AI analysis and get code suggestions
+- ✅ **Apply Changes** - Accept AI suggestions to create new files or overwrite existing ones
 
 ---
 
-## 📁 Repository Contents
+## 🚀 Installation
 
-### 1. **PROJECT_PLAN.md** - Strategic Overview
-- Complete project vision and architecture
-- MVP feature set definition
-- Technical components breakdown
-- Implementation timeline (4-week roadmap)
-- Success metrics and future enhancements
+### From Source (Development)
 
-**Use this for:** Understanding the big picture, project scope, and long-term vision
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/baseline-dev.git
+   cd baseline-dev
+   ```
 
-### 2. **CLAUDE_PROMPT.md** - Complete Implementation Guide
-- **The main document for development**
-- Detailed technical specifications
-- Complete code examples for every component
-- File structure and organization
-- Configuration details
-- Security considerations
-- Testing strategy
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-**Use this for:** Actual development - copy/paste to Claude for building the MVP
+3. **Compile TypeScript**
+   ```bash
+   npm run compile
+   ```
 
-### 3. **QUICK_START_GUIDE.md** - Quick Reference
-- Visual architecture diagram
-- MVP feature checklist
-- Week-by-week development roadmap
-- Command references
-- User experience flows
-- Launch checklist
+4. **Open in VS Code**
+   ```bash
+   code .
+   ```
 
-**Use this for:** Quick reference during development, tracking progress
+5. **Run the extension**
+   - Press `F5` to open Extension Development Host
+   - Or use Debug menu: "Run > Start Debugging"
 
-### 4. **package.json.template** - Extension Manifest
-- Complete VS Code extension configuration
-- All commands and settings defined
-- Dependencies listed
-- Scripts for build/test/publish
+### From VS Code Marketplace (Coming Soon)
 
-**Use this for:** Copy to `package.json` to start development immediately
+Once published, search for "Baseline.dev" in VS Code Extensions marketplace.
 
 ---
 
-## 🚀 How to Use This Repository
+## ⚙️ Setup & Configuration
 
-### Option 1: Build It Yourself
+### 1. Choose Your AI Model
 
-1. **Read PROJECT_PLAN.md** to understand the vision
-2. **Use CLAUDE_PROMPT.md** to build the extension
-3. **Reference QUICK_START_GUIDE.md** for quick lookups
-4. **Copy package.json.template** to start
+Baseline.dev supports three AI providers. Choose one based on your preference:
 
-### Option 2: Use Claude to Build It
+#### Option A: Claude (Anthropic) - Recommended
 
-1. Copy the entire **CLAUDE_PROMPT.md** content
-2. Paste it into Claude (or Claude Code/Cursor)
-3. Say: "Build this VS Code extension following these specifications"
-4. Claude will generate all the code files
+1. **Get API Key**
+   - Visit [Anthropic Console](https://console.anthropic.com/)
+   - Sign up or log in
+   - Navigate to "API Keys"
+   - Create a new API key
 
-### Option 3: Phased Approach
+2. **Configure in VS Code**
+   - Open Command Palette (`Cmd/Ctrl+Shift+P`)
+   - Run: `Baseline.dev: Configure`
+   - Select "Claude" as the model
+   - Enter your API key when prompted
+   - Choose model version (default: `claude-3-5-sonnet-20241022`)
 
-**Week 1:** Foundation
+3. **Verify Setup**
+   - Open chat: `Cmd/Ctrl+Shift+B`
+   - Send a test message
+
+#### Option B: Gemini (Google)
+
+1. **Get API Key**
+   - Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
+   - Sign in with Google account
+   - Click "Create API Key"
+   - Copy the generated key
+
+2. **Configure in VS Code**
+   - Run: `Baseline.dev: Configure`
+   - Select "Gemini" as the model
+   - Enter your API key
+   - Choose model version (default: `gemini-1.5-flash`)
+
+#### Option C: Ollama (Local Models)
+
+1. **Install Ollama**
+   ```bash
+   # macOS
+   brew install ollama
+   
+   # Linux
+   curl https://ollama.ai/install.sh | sh
+   
+   # Windows: Download from https://ollama.ai
+   ```
+
+2. **Pull a Model**
+   ```bash
+   ollama pull codellama
+   # Or other models: mistral, llama2, deepseek-coder
+   ```
+
+3. **Start Ollama Server**
+   ```bash
+   ollama serve
+   # Runs on http://localhost:11434 by default
+   ```
+
+4. **Configure in VS Code**
+   - Run: `Baseline.dev: Configure`
+   - Select "Ollama" as the model
+   - Verify endpoint: `http://localhost:11434`
+   - Enter model name: `codellama` (or your chosen model)
+
+---
+
+### 2. Configure Target Browsers
+
+Set which browsers you're targeting for compatibility checks:
+
+1. **Open VS Code Settings** (`Cmd/Ctrl+,`)
+2. Search for "Baseline.dev"
+3. Configure:
+   ```json
+   {
+     "baselinedev.targetBrowsers": ["chrome", "firefox", "safari", "edge"],
+     "baselinedev.baselineThreshold": "high", // or "low"
+     "baselinedev.useRealTimeData": true  // Fetch latest data
+   }
+   ```
+
+**Threshold Meanings:**
+- `high` - Feature available in all major browsers (highest compatibility)
+- `low` - Feature available in some browsers (moderate compatibility)
+
+---
+
+## 📖 How to Use
+
+### Interactive Chat
+
+**Open the chat panel:**
+- Keyboard: `Cmd/Ctrl+Shift+B`
+- Command Palette: `Baseline.dev: Open Chat`
+
+**Ask about web features:**
+```
+You: Can I use Container Queries in production?
+AI: Container Queries became Baseline in late 2020...
+
+You: Show me how to use CSS Subgrid
+AI: Subgrid is Baseline (high) since 2024-03...
+```
+
+**Attach files for analysis:**
+1. Click "📎 Attach File" button
+2. AI receives your current file context
+3. Ask questions about the code
+4. Get suggestions for improvements
+
+**Apply AI suggestions:**
+1. After AI provides code suggestions
+2. Click "💾 Save as New File" to create a new file
+3. Or click "✏️ Overwrite [filename]" to replace the attached file
+4. Review changes before accepting
+
+### Feature Discovery
+
+**Discover newly available features:**
+
+1. Open Command Palette (`Cmd/Ctrl+Shift+P`)
+2. Run: `Baseline.dev: Discover New Features`
+3. Choose time range (e.g., "Last 6 months")
+4. View report of newly Baseline features
+5. Ask AI for implementation examples
+
+### Smart Refactoring
+
+**Modernize legacy code:**
+
+1. Select code in your editor
+2. Right-click → "Baseline.dev: Refactor for Modern Browsers"
+3. Or use Command Palette
+4. AI analyzes and suggests modern alternatives
+5. Apply changes with one click
+
+### Feature Status Check
+
+**Check specific feature status:**
+
+1. Run: `Baseline.dev: Check Feature Status`
+2. Enter feature name (e.g., "CSS Grid", "Fetch API")
+3. View:
+   - Baseline status (widely/newly/limited)
+   - Browser support details
+   - Availability dates
+   - Specification links
+
+### Refresh Data
+
+**Update to latest Baseline data:**
+
+1. Run: `Baseline.dev: Refresh Baseline Data`
+2. Extension fetches latest from Web Platform Dashboard API
+3. Cache is cleared for fresh queries
+
+---
+
+## 🎨 UI Features
+
+### Modern, Interactive Design
+- **Smooth Animations** - Powered by anime.js for delightful interactions
+- **Teal/Green Theme** - Matches Baseline.dev branding
+- **Message Bubbles** - Clear distinction between user and AI
+- **Code Highlighting** - Syntax-highlighted code blocks
+- **Auto-scroll** - Smooth scroll to latest messages
+- **Loading Indicators** - Animated dots while AI is thinking
+
+### Keyboard Shortcuts
+- `Cmd/Ctrl+Enter` - Send message
+- `Cmd/Ctrl+Shift+B` - Open chat panel
+- `Esc` - Close panels
+
+---
+
+## 🏗️ Architecture
+
+### Core Components
+
+```
+src/
+├── ai/                      # AI Model Integration
+│   ├── ModelManager.ts      # Multi-model orchestration
+│   ├── PromptBuilder.ts     # Context-aware prompts
+│   └── providers/           # AI provider implementations
+│       ├── ClaudeProvider.ts
+│       ├── GeminiProvider.ts
+│       └── OllamaProvider.ts
+├── baseline/                # Baseline Data Management
+│   ├── BaselineAPI.ts       # 3-tier API with fallbacks
+│   ├── FeatureDatabase.ts   # Local feature database
+│   └── types.ts             # Type definitions
+├── commands/                # VS Code Commands
+│   ├── openChat.ts
+│   ├── discoverFeatures.ts
+│   ├── refactorModern.ts
+│   ├── checkFeature.ts
+│   ├── configure.ts
+│   └── refreshData.ts
+├── ui/                      # User Interface
+│   └── ChatPanel.ts         # Main chat webview
+└── extension.ts             # Extension entry point
+```
+
+### Data Sources
+
+**3-Tier Fallback System:**
+
+1. **Web Platform Dashboard API** (Primary)
+   - Real-time, always current
+   - Advanced query syntax
+   - `https://api.webstatus.dev/v1/features`
+
+2. **GitHub Raw URL** (Fallback)
+   - Direct from source repository
+   - `https://raw.githubusercontent.com/web-platform-dx/web-features/`
+
+3. **Local NPM Package** (Offline)
+   - Works without internet
+   - Fast, reliable
+   - `web-features` npm package
+
+---
+
+## 🧪 Development
+
+### Build & Watch
+
 ```bash
-# Start with basic extension structure
-# Integrate web-features package
-# Connect to one AI model (Claude)
-```
-
-**Week 2:** Chat Interface
-```bash
-# Build webview panel
-# Implement message handling
-# Test end-to-end conversation
-```
-
-**Week 3:** Feature Discovery
-```bash
-# Add "Discover Features" command
-# Query Baseline data
-# Generate reports
-```
-
-**Week 4:** Polish & Launch
-```bash
-# Add remaining AI models
-# Documentation
-# Testing
-# Package for distribution
-```
-
----
-
-## 🎨 Key Features to Implement
-
-### Core MVP Features
-
-1. **Interactive Chat Panel**
-   - Webview-based UI
-   - Context-aware responses
-   - File/code attachment support
-
-2. **Feature Discovery Command**
-   - Analyzes current project
-   - Suggests newly available Baseline features
-   - Provides implementation guidance
-
-3. **Smart Refactoring**
-   - Detects legacy patterns
-   - Suggests modern alternatives
-   - Checks Baseline compatibility
-
-4. **Feature Status Checker**
-   - Query any web feature
-   - Display Baseline status
-   - Show browser support data
-
-5. **Multi-Model Support**
-   - Claude (Anthropic)
-   - Gemini (Google)
-   - Ollama (local models)
-
----
-
-## 🛠️ Technology Stack
-
-### Core Dependencies
-```json
-{
-  "web-features": "^1.0.0",           // Official Baseline data
-  "@anthropic-ai/sdk": "^0.27.0",     // Claude AI
-  "@google/generative-ai": "^0.18.0", // Gemini AI
-  "axios": "^1.7.0"                   // Ollama HTTP client
-}
-```
-
-### Development Tools
-```json
-{
-  "@types/vscode": "^1.80.0",   // VS Code API types
-  "typescript": "^5.x",         // TypeScript
-  "webpack": "^5.x",            // Bundler
-  "@vscode/vsce": "^2.x"        // Extension packager
-}
-```
-
----
-
-## 📊 Project Timeline
-
-### MVP Development: 4 Weeks
-
-| Week | Focus Area | Deliverables |
-|------|-----------|-------------|
-| 1 | Foundation | Extension scaffold, web-features integration, Claude provider |
-| 2 | Chat UI | Webview panel, message handling, prompt builder |
-| 3 | Features | Discovery command, refactoring engine, Baseline queries |
-| 4 | Polish | Gemini/Ollama support, docs, testing, packaging |
-
-**Total Estimated Time:** 80-100 hours of development
-
----
-
-## 🎯 Success Criteria
-
-The MVP is complete when:
-
-✅ Extension installs and activates in VS Code  
-✅ Chat panel opens and responds intelligently  
-✅ Users can switch between AI models  
-✅ "Discover Features" generates useful reports  
-✅ Baseline data loads and queries correctly  
-✅ Basic refactoring suggestions work  
-✅ Configuration UI is functional  
-✅ Documentation is complete  
-
----
-
-## 🔐 Security Considerations
-
-- API keys stored in VS Code secret storage (not plain text)
-- All user inputs validated and sanitized
-- Rate limiting for AI API calls
-- No sensitive data logged
-- Privacy policy documented
-
----
-
-## 📚 Essential Resources
-
-### Official Documentation
-- [Web Platform Dashboard Baseline](https://web.dev/articles/web-platform-dashboard-baseline)
-- [web-features npm package](https://www.npmjs.com/package/web-features)
-- [VS Code Extension API](https://code.visualstudio.com/api)
-- [VS Code Extension Samples](https://github.com/microsoft/vscode-extension-samples)
-
-### AI Provider Documentation
-- [Anthropic Claude API](https://docs.anthropic.com/)
-- [Google Gemini API](https://ai.google.dev/docs)
-- [Ollama API](https://github.com/ollama/ollama/blob/main/docs/api.md)
-
----
-
-## 🎓 Example Use Cases
-
-### Use Case 1: Discovering Container Queries
-```
-Developer: Opens CSS file with media queries
-Command: "WebFeature AI: Discover New Features"
-Extension: Detects Container Queries are now Baseline
-AI: Suggests replacing media queries with container queries
-Result: Modern, more maintainable CSS
-```
-
-### Use Case 2: Modernizing Polyfills
-```
-Developer: Selects fetch polyfill code
-Command: "Refactor for Modern Browsers"
-Extension: Checks fetch Baseline status (high since 2017)
-AI: Suggests removing polyfill, using native fetch
-Result: Smaller bundle, native performance
-```
-
-### Use Case 3: Feature Exploration
-```
-Developer: Opens chat panel
-Question: "Can I use View Transitions API?"
-Extension: Queries web-features database
-AI: Responds with:
-  - Baseline status: Limited (2024-03)
-  - Browser support: Chrome 111+, Edge 111+
-  - Code example with fallback
-Result: Informed decision with implementation guide
-```
-
----
-
-## 🚦 Getting Started (Quick Setup)
-
-### 1. Initialize Project
-```bash
-cd /Users/etharo/Desktop/base-dev
-cp package.json.template package.json
-npm install
-```
-
-### 2. Create TypeScript Config
-```bash
-npx tsc --init
-```
-
-### 3. Create Directory Structure
-```bash
-mkdir -p src/{ai/providers,baseline,ui,commands,utils}
-mkdir -p media/styles
-```
-
-### 4. Start Coding
-Follow **CLAUDE_PROMPT.md** for complete implementation details.
-
-### 5. Test Extension
-```bash
+# Compile once
 npm run compile
-# Press F5 in VS Code to open Extension Development Host
+
+# Watch mode (auto-compile on save)
+npm run watch
+
+# Lint code
+npm run lint
 ```
 
----
+### Testing
 
-## 📈 Post-MVP Roadmap
+```bash
+# Run in Extension Development Host
+# Press F5 in VS Code
 
-### Version 0.2.0 - Enhanced UX
-- Hover providers for instant feature info
-- Inline diagnostics for outdated patterns
-- Quick fix code actions
+# Test commands
+1. Open chat panel
+2. Send messages
+3. Attach files
+4. Test feature discovery
+5. Try refactoring
+```
 
-### Version 0.3.0 - Team Features
-- Project-wide analysis dashboard
-- Feature adoption tracking
-- Shareable reports
+### Packaging
 
-### Version 0.4.0 - Automation
-- Automated PR generation
-- CI/CD integration
-- Performance insights
+```bash
+# Create .vsix package
+npm run package
+
+# Install locally
+code --install-extension baseline-dev-0.1.0.vsix
+```
 
 ---
 
 ## 🤝 Contributing
 
-This is a project template/plan. If you build this extension:
+We welcome contributions! Here's how to get started:
 
-1. Follow the specifications in **CLAUDE_PROMPT.md**
-2. Test thoroughly with real projects
-3. Document any deviations or improvements
-4. Consider open-sourcing the result
+### Development Setup
+
+1. Fork the repository
+2. Clone your fork
+3. Create a feature branch
+   ```bash
+   git checkout -b feature/amazing-feature
+   ```
+4. Make your changes
+5. Test thoroughly
+6. Commit with clear messages
+   ```bash
+   git commit -m "Add: Amazing feature description"
+   ```
+7. Push to your fork
+   ```bash
+   git push origin feature/amazing-feature
+   ```
+8. Open a Pull Request
+
+### Contribution Guidelines
+
+- **Code Style**: Follow existing TypeScript conventions
+- **Commits**: Use clear, descriptive commit messages
+- **Testing**: Test all changes in Extension Development Host
+- **Documentation**: Update README if adding features
+- **API Keys**: Never commit API keys or secrets
+
+### Areas for Contribution
+
+- 🎨 UI/UX improvements
+- 🔌 New AI provider integrations
+- 📊 Additional data visualizations
+- 🌍 Internationalization
+- 🧪 Test coverage
+- 📝 Documentation improvements
+
+---
+
+## 📚 Resources
+
+### Official Documentation
+- [Web Platform Dashboard Baseline](https://web.dev/articles/web-platform-dashboard-baseline)
+- [web-features Package](https://www.npmjs.com/package/web-features)
+- [VS Code Extension API](https://code.visualstudio.com/api)
+
+### AI Provider Documentation
+- [Anthropic Claude API](https://docs.anthropic.com/)
+- [Google Gemini API](https://ai.google.dev/docs)
+- [Ollama Documentation](https://github.com/ollama/ollama)
+
+### Community
+- [Baseline.dev Website](https://baseline.dev)
+- [GitHub Issues](https://github.com/yourusername/baseline-dev/issues)
+- [Discussions](https://github.com/yourusername/baseline-dev/discussions)
+
+---
+
+## 🔒 Privacy & Security
+
+### API Key Storage
+- Keys stored in VS Code **Secret Storage** (encrypted)
+- Never stored in plain text or settings files
+- Never logged or transmitted except to respective AI providers
+
+### Data Handling
+- User code only sent to AI when explicitly requested
+- No telemetry or analytics collected
+- All processing happens locally or via your chosen AI provider
+- No data stored on external servers
+
+### Best Practices
+- Keep API keys confidential
+- Review code suggestions before applying
+- Use Ollama for sensitive projects (local processing)
+- Regularly update the extension
+
+---
+
+## 🐛 Troubleshooting
+
+### Chat Not Responding
+
+**Problem:** Messages sent but no AI response
+
+**Solutions:**
+1. Check API key is configured: `Baseline.dev: Configure`
+2. Verify internet connection (for Claude/Gemini)
+3. Check Ollama is running: `ollama serve` (for Ollama)
+4. View Output panel: "Baseline.dev" for errors
+5. Try refreshing: Reload VS Code window
+
+### Feature Data Not Loading
+
+**Problem:** "Failed to load features" error
+
+**Solutions:**
+1. Check internet connection
+2. Run: `Baseline.dev: Refresh Baseline Data`
+3. Check VS Code Output panel for specific errors
+4. Extension will fallback to local package automatically
+
+### Ollama Connection Failed
+
+**Problem:** Cannot connect to Ollama
+
+**Solutions:**
+1. Verify Ollama is installed: `ollama --version`
+2. Start Ollama server: `ollama serve`
+3. Check endpoint in settings: `http://localhost:11434`
+4. Try pulling model again: `ollama pull codellama`
+
+### Apply Changes Not Working
+
+**Problem:** "Save as New File" button doesn't work
+
+**Solutions:**
+1. Ensure you've attached a file first
+2. Check AI response contains code blocks
+3. Try asking AI to reformat response as code
+4. Manually copy/paste if needed
 
 ---
 
 ## 📄 License
 
-This documentation is provided as-is for educational and development purposes.
-
-The web-features package is maintained by the Web Platform Dashboard team.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
 ## 🙏 Acknowledgments
 
 - **Web Platform Dashboard Team** - For the Baseline initiative
-- **web-features Maintainers** - For the excellent npm package
-- **VS Code Team** - For comprehensive extension APIs
+- **web-features Maintainers** - For the authoritative data package
 - **Anthropic, Google, Ollama** - For AI model APIs
+- **VS Code Team** - For comprehensive extension APIs
+- **anime.js** - For smooth UI animations
 
 ---
 
-## 📞 Next Steps
+## 🗺️ Roadmap
 
-1. **Review** all documentation files
-2. **Choose** your development approach (manual or AI-assisted)
-3. **Set up** your development environment
-4. **Start** with CLAUDE_PROMPT.md as your implementation guide
-5. **Build** the MVP following the 4-week roadmap
-6. **Test** with real web development projects
-7. **Package** and publish to VS Code Marketplace
-8. **Iterate** based on user feedback
+### Current Version: 0.1.0
+- ✅ Interactive chat with AI
+- ✅ Multi-model support (Claude, Gemini, Ollama)
+- ✅ Feature discovery and status checking
+- ✅ Smart refactoring suggestions
+- ✅ File attachment and apply changes
+- ✅ Real-time Baseline data
 
----
+### Upcoming: 0.2.0
+- 🔄 Hover providers for instant feature info
+- 🔄 Inline diagnostics for outdated patterns
+- 🔄 Quick fix code actions
+- 🔄 Project-wide analysis dashboard
 
-## 💡 Questions?
-
-Refer to:
-- **PROJECT_PLAN.md** for strategic questions
-- **CLAUDE_PROMPT.md** for technical implementation
-- **QUICK_START_GUIDE.md** for quick reference
-- Official VS Code and web-features documentation
-
----
-
-**Ready to build the future of web development tooling? Start with CLAUDE_PROMPT.md!** 🚀
+### Future: 0.3.0+
+- 📋 Team collaboration features
+- 🤖 Automated PR generation
+- 📊 Performance insights
+- 🌍 Multi-language support
 
 ---
 
-## 📊 Project Status
+## 💬 Support
 
-**Status:** 📝 Planning Complete - Ready for Development
+Need help? Here's how to get support:
 
-**Next Action:** Copy CLAUDE_PROMPT.md to Claude and begin implementation
-
-**Target MVP Date:** 4 weeks from start
-
-**Complexity:** Medium (estimated 80-100 hours)
-
-**Value Proposition:** High - Unique positioning in AI coding assistant market
+- 📖 **Documentation**: Check this README first
+- 🐛 **Bug Reports**: [Open an issue](https://github.com/yourusername/baseline-dev/issues)
+- 💡 **Feature Requests**: [Start a discussion](https://github.com/yourusername/baseline-dev/discussions)
+- 📧 **Email**: support@baseline.dev (for sensitive issues)
 
 ---
 
-*Last Updated: October 5, 2025*
+## ⭐ Show Your Support
 
+If you find Baseline.dev useful:
+
+- ⭐ Star the repository
+- 🐦 Share on Twitter
+- 📝 Write a blog post
+- 🤝 Contribute code or documentation
+- 💬 Tell your colleagues
+
+---
+
+<div align="center">
+
+**Built with ❤️ for the web development community**
+
+[Website](https://baseline.dev) • [GitHub](https://github.com/yourusername/baseline-dev) • [VS Code Marketplace](#)
+
+</div>
